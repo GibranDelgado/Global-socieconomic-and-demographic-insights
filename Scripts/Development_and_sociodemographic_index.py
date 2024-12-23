@@ -1,100 +1,220 @@
 import pandas as pd
 import numpy as np
+import pycountry as pyc
 
-def Correcting_country_names(df):
-    import pycountry as pyc
+def concat(df1, df2):
+    return pd.concat([df1, df2], axis=1)
+
+def merge(df1, df2, on='ISO3_code'):
+    return df1.merge(df2, how='inner', on=on)
+
+class CorrectingCountriesInfo:
+    def filter_the_regions(self, df):
+        filteredDF = df[df.LocTypeName == 'Country/Area']
+        return filteredDF.drop(columns=['LocTypeName'])
+
+    def remove_redundant_years(self, df):
+        return df[df.Time < 2100]
+
+    def __get_unique_values(self, col):
+        return pd.unique(col)
+
+    def country_names(self, df):
+        countryCodes = self.__get_unique_values(df.ISO3_code)
+        countryNames = self.__get_unique_values(df.Location)
+        correctNames = []
+
+        for code, name in zip(countryCodes, countryNames):
+            result = pyc.countries.get(alpha_3=code)
+            name = result.name if result else name
+            correctNames.append(name)
+
+        correctedInfo = pd.DataFrame({
+            'ISO3_code': countryCodes,
+            'Official_names': correctNames
+        })
+        countriesInfo = merge(df, correctedInfo)
+        return countriesInfo.drop(columns=['Location'])
+
+class ClassifyCountryRegions:
+    def __clean_the_data(self, regionsInfo):
+        regionsInfo = regionsInfo.dropna()
+        return regionsInfo.rename(columns={
+            'alpha-3': 'ISO3_code',
+            'region': 'continent'
+        })
     
-    Country_codes = pd.unique(df.ISO3_code)
-    Country_names = pd.unique(df.Location)
-    Correct_names = []
+    def classify_subregions(self, regionsInfo):
+        regionsInfo = self.__clean_the_data(regionsInfo)
+        regions = {
+            'Northern America': 'Northern and Central America and Caribbean',
+            'Central America': 'Northern and Central America and Caribbean',
+            'Caribbean': 'Northern and Central America and Caribbean',
+            'South America': 'South America',
+
+            'Northern Europe': 'Nothern, Southern and Western Europe',
+            'Southern Europe': 'Nothern, Southern and Western Europe',
+            'Western Europe': 'Nothern, Southern and Western Europe',
+            'Eastern Europe': 'Eastern Europe',
+
+            'Australia and New Zealand': 'East Asia and Pacific',
+            'South-eastern Asia': 'East Asia and Pacific',
+            'Eastern Asia': 'East Asia and Pacific',
+
+            'Northern Africa': 'Middle East and North Africa',
+            'Western Asia': 'Middle East and North Africa',
+            'Sub-Saharan Africa': 'Sub-Saharan Africa',
+
+            'Southern Asia': 'Central and Southern Asia',
+            'Central Asia': 'Central and Southern Asia',
+
+            'Micronesia': 'Micronesia',
+            'Polynesia': 'Polynesia',
+            'Melanesia': 'Melanesia'
+        }
+        regionsInfo['region'] = [regions[i] for i in regionsInfo['sub-region']]
+        regionsInfo['world'] = 'World'
+        return regionsInfo
+    
+    def merge_the_info(self, df, regionsInfo):
+        col = ['ISO3_code','region','continent','world']
+        return merge(df, regionsInfo.loc[:,col])
+    
+class DemoIndex(CorrectingCountriesInfo, ClassifyCountryRegions):
+    def __init__(self, df):
+        self.df = df
         
-    for Code, Name in zip(Country_codes, Country_names):
-        Result = pyc.countries.get(alpha_3=Code)
+    def __classify_info(self, infoByYear):
+        labels = ['Very low', 'Low', 'Medium', 'High', 'Very high']
+        return pd.cut(infoByYear, bins=len(labels), labels=labels)
+    
+    def __metric_by_year(self, df, metric):
+        infoByYear = df.groupby('Time')[[metric]]
+        return infoByYear.transform(lambda x:self.__classify_info(x))
 
-        if Result is not None: #If code is already asigned to a country
-            Correct_names.append(Result.name)
-        else:
-            Correct_names.append(Name) #Otherwise just let the name as is
-            
-    
-    Corrected_country_info = pd.DataFrame({'ISO3_code':Country_codes,'Official_names':Correct_names})  
-    
-    return df.merge(Corrected_country_info, how='inner', on='ISO3_code').iloc[:,:-1]
+    def clean_demo_index(self, regions):
+        demoIndex = self.filter_the_regions(self.df)
+        demoIndex = self.remove_redundant_years(demoIndex)
+        demoIndex = self.country_names(demoIndex)
+        demoIndex['BirthRate_category'] = self.__metric_by_year(demoIndex, 'CBR')
+        demoIndex['LifeExpectancy_category'] = self.__metric_by_year(demoIndex, 'LEx')
+        regions = self.classify_subregions(regions)
 
-def Classifying_country_regions(Regions):
-    Regions = Regions.rename(columns={'alpha-3':'ISO3_code','region':'continent'})
-    New_subregions = pd.DataFrame({'sub-region':list(pd.unique(Regions['sub-region'])),
-                                    'region':['Central and Southern Asia','Northern, Southern and Western Europe','Northern, Southern and Western Europe',
-                                    'Middle East and North Africa','Polynesia','Sub-Saharan Africa','Northern and Central America and Caribbean','South America',
-                                    'Middle East and North Africa','East Asia and Pacific','Northern, Southern and Western Europe','Eastern Europe',
-                                    'Northern and Central America and Caribbean','Northern and Central America and Caribbean','East Asia and Pacific','East Asia and Pacific',
-                                    'Melanesia','Micronesia','Central and Southern Asia'],
-                                    'world':'World'})
-    
-    # NLAC = North & Latin America & Caribbean
-    # EU = Europe
-    # MENA = Middle East & North Africa
-    # EAP = East Asia & Pacific
-    # CA = Central Asia
-    # SA = South Asia
-    # SSA = Sub-Saharan Africa
-    
-    return Regions.merge(New_subregions, how='inner', on='sub-region')
+        return self.merge_the_info(demoIndex, regions)
 
-def Cleaning_demo_index(Demo_index_src, Regions):
-    #I will take only the countries, not regions or subregions
-    Demo_index_stg = Demo_index_src[(Demo_index_src.LocTypeName=='Country/Area')&(Demo_index_src.Time<2100)]
-    Demo_index_stg = Correcting_country_names(Demo_index_stg)
-    Demo_index_stg['BirthRate_category'] = Demo_index_stg.groupby('Time')[['CBR']].transform(lambda x:pd.cut(x,5,labels=['Very low','Low','Medium','High','Very high'])).astype(str)
-    Demo_index_stg['LifeExpectancy_category'] = Demo_index_stg.groupby('Time')[['LEx']].transform(lambda x:pd.cut(x,5,labels=['Very low','Low','Medium','High','Very high'])).astype(str)
+class PopulationByAges(CorrectingCountriesInfo):
+    def __init__(self, df):
+        self.df = df
     
-    Regions = Classifying_country_regions(Regions)
-    Demo_index_stg =  Demo_index_stg.merge(Regions.loc[:,['ISO3_code','region','continent','world']], how='inner', on='ISO3_code')
-    
-    return Demo_index_stg
+    def clean_population_by_ages(self):
+        popByAges = self.filter_the_regions(self.df)
+        popByAges.loc[:,'PopMale':'PopTotal'] *= 1000
+        return self.country_names(popByAges)
 
-def Cleaning_population_by_ages(Population_by_ages_src):
-    Population_by_ages_stg = Population_by_ages_src[Population_by_ages_src.LocTypeName=='Country/Area']
-    Population_by_ages_stg = pd.concat([Population_by_ages_stg.iloc[:,:5], Population_by_ages_stg.iloc[:,-3:]*1000], axis=1)    
-    Population_by_ages_stg = Correcting_country_names(Population_by_ages_stg)
-      
-    return Population_by_ages_stg
+class MultipleDemoIndex(CorrectingCountriesInfo, ClassifyCountryRegions):
+    def __init__(self, df, popByAges):
+        self.df = df
+        self.popByAges = popByAges
+        self.start = 1990
+        self.end = 2022
+    
+    def __clean_the_data(self, multipleDemoIndex):
+        return multipleDemoIndex.rename(columns={
+            'iso3':'ISO3_code',
+            'country':'Location'
+        })
+    
+    def __just_countries(self, multDemoIndex):
+        mapping = [len(iso3)==3 for iso3 in multDemoIndex['ISO3_code']]
+        return multDemoIndex[mapping]
 
-def Cleaning_multiple_demo_index(Multiple_demo_index_src, Regions, Population_by_ages_stg):
-    Multiple_demo_index_stg = Multiple_demo_index_src.rename(columns={'iso3':'ISO3_code', 'country':'Location'})
-    #Rows 195 and the following are regions/subregions, so just ignore them
-    Multiple_demo_index_stg = Correcting_country_names(Multiple_demo_index_stg.loc[:194,:])
+    def __repeat_countryInfo(self, df):
+        size = self.end - self.start + 1
+        countryInfo = pd.DataFrame(np.repeat(df.values, size, axis=0))
+        countryInfo.columns = df.columns
+        return countryInfo
     
-    Regions = Classifying_country_regions(Regions)
-    Country_info = Multiple_demo_index_stg.iloc[:194,0:2]
-    Country_info =  Country_info.merge(Regions.loc[:,['ISO3_code','region','continent','world']], how='inner', on='ISO3_code')
-    hdi = Multiple_demo_index_stg.iloc[:, 5:38] #These columns belong hdi index
-    mys = Multiple_demo_index_stg.iloc[:, 104:137] #These columns belong mys index
-    gii = Multiple_demo_index_stg.iloc[:, 613:646] #These columns belong gii index
-    Times = tuple(range(1990,2023)) #Range of years between 1990 and 2022
+    def __metric_values(self, multDemoIndex, metric):
+        start = f'{metric}_{self.start}'
+        end = f'{metric}_{self.end}'
+        metricsValues = multDemoIndex.loc[:, start:end]
+        metricsValues = metricsValues.transpose().unstack().reset_index(drop=True)
+        return pd.DataFrame(metricsValues, columns=[metric])
     
-    hdi_new = []
-    mys_new = []
-    gii_new = []
-    Times_new = []
+    def __repeat_years(self, multDemoIndex):
+        numberOfCountries = multDemoIndex.shape[0]
+        years = np.tile(range(self.start, self.end+1), numberOfCountries)
+        return pd.DataFrame(pd.Series(years, name='Time'))
     
-    for i in range(len(Country_info)):
-        hdi_new.extend(hdi.iloc[i,:])
-        mys_new.extend(mys.iloc[i,:])
-        gii_new.extend(gii.iloc[i,:])
-        Times_new.extend(Times)
+    def __mult_metric_values(self, multDemoIndex, metrics):
+        multMetrics = None
+        for i in metrics:
+            metricsValues = self.__metric_values(multDemoIndex, i)
+            multMetrics = concat(multMetrics, metricsValues)        
+        years = self.__repeat_years(multDemoIndex)
+        return concat(years, multMetrics)
     
-    Country_info_new = pd.DataFrame(np.repeat(Country_info.values,len(Times),axis=0))
-    Country_info_new.columns = Country_info.columns
-    Multi_demo_index_values = pd.DataFrame({'Time':Times_new, 'hdi':hdi_new, 'mys':mys_new, 'gii':gii_new})
-    Multiple_demo_index_stg = pd.concat([Country_info_new, Multi_demo_index_values], axis=1)
-    Total_population_by_country_age = Population_by_ages_stg.groupby(['ISO3_code','Time']).agg({'PopTotal':'sum'}).reset_index()
-    Multiple_demo_index_stg = Multiple_demo_index_stg.merge(Total_population_by_country_age, how='inner', on=['ISO3_code', 'Time'])
+    def __metric_categories(self, multDemoIndex, metric):
+        metric_values = {
+            'hdi':(0.4, 0.6, 0.75, 0.9),
+            'gii':(0.15, 0.3, 0.5, 0.65),
+            'mys':(2, 5, 8, 11)
+        }
+        labels = ['Very low','Low','Medium','High','Very high']
+        categories = pd.cut(multDemoIndex[metric],
+                            bins = (0,) + metric_values[metric] + (np.inf,),
+                            labels=labels)
+        return np.where(categories.isnull(), 'No data', categories)
     
-    return Multiple_demo_index_stg
+    def __add_mult_metric_categories(self, multDemoIndex, metrics):
+        for i in metrics:
+            metricsCategories = self.__metric_categories(multDemoIndex, i)
+            multDemoIndex[f'{i}_category'] = metricsCategories
+    
+    def __pop_by_country_age(self):
+        popByCountryAge = self.popByAges.groupby(['ISO3_code','Time'])
+        return popByCountryAge.agg({'PopTotal':'sum'}).reset_index()
+                
+    def clean_multiple_demo_index(self, regions):
+        multDemoIndex = self.__clean_the_data(self.df)
+        multDemoIndex = self.country_names(multDemoIndex)
+        multDemoIndex = self.__just_countries(multDemoIndex)
+        
+        regions = self.classify_subregions(regions)
+        countryInfo = multDemoIndex[['ISO3_code','Official_names']]
+        countryInfo = self.merge_the_info(countryInfo, regions)
+        countryInfo = self.__repeat_countryInfo(countryInfo)
+        
+        multMetrics = self.__mult_metric_values(multDemoIndex, ['hdi','mys','gii'])
+        metricsByCountry = concat(countryInfo, multMetrics)
+        self.__add_mult_metric_categories(metricsByCountry, ('hdi','mys','gii'))
+        popByCountryAge = self.__pop_by_country_age()
+        
+        return merge(metricsByCountry, popByCountryAge, on=['ISO3_code', 'Time'])    
 
-def Cleaning_hours_worked(Hours_worked_src):
-    Hours_worked_stg = Hours_worked_src.rename(columns={'countrycode':'ISO3_code', 'country':'Location', 'year':'Time', 'avh':'Avg_hours'})
-    Hours_worked_stg = Correcting_country_names(Hours_worked_stg)
+class HoursWorked(CorrectingCountriesInfo):
+    def __init__(self, df):
+        self.df = df
     
-    return Hours_worked_stg
+    def __clean_the_data(self):
+        self.df = self.df.dropna()
+        return self.df.rename(columns={
+            'countrycode':'ISO3_code',
+            'country':'Location',
+            'year':'Time',
+            'avh':'Avg_hours'
+        })
+    
+    def oecd_countries(self, df):
+        OECD = pd.DataFrame({'ISO3_code':('AUS','AUT','BEL','CAN','CHL','COL',
+                                          'CRI','CZE','DNK','EST','FIN','FRA',
+                                          'DEU','GRC','HUN','ISL','IRL','ISR',
+                                          'ITA','JPN','KOR','LVA','LTU','LUX',
+                                          'MEX','NLD','NZL','NOR','POL','PRT',
+                                          'SVK','SVN','ESP','SWE','CHE','TUR',
+                                          'GBR','USA')})
+        return df.merge(OECD, how='inner', on='ISO3_code')
+    
+    def clean_hours_worked(self):
+        hoursWorked = self.__clean_the_data()
+        return self.country_names(hoursWorked)
