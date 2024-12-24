@@ -13,16 +13,23 @@ The project has two folders:
 ## About the use
 Execute the "Main.py" script. This going to create a new folder "Resulting files" with the excel files required to recreate the dashboard.
 
-`Take in consideration that code are processing thousands of registers, so maybe the execution time can reach the 9 minutes.`
+`Take into consideration that code processes thousands of registers, so maybe the execution time can reach the 9 minutes.`
 
 ## Dashboard
-
 See the links below to visualize the implemented dashboard
   - NovyPro: https://project.novypro.com/jv1591
   - Github pages: https://gibrandelgado.github.io/Global-socieconomic-and-demographic-insights/
 
+## Results discussion
+  - **Birth Rate and life expectancy**: Both indicators are higher in Africa and Europe, respectively, than other regions of the world. However, while birth rate tends to decrease over the years, life expecancy tends to increase.
+  - **Population trends:** In most of the countries, especially in first world countries, population tends to decrease each year and the population pyramid tends to invert. These factors affect the effective generational change.
+  - **Socio-demogrpahic indicators:** Countries with a high humand development index and a high mean years of schooling also have a low gender inequality index and viceversa.
+  - **Low birth rate countries categorization:** 
+      - Those where people have high schooling, high life quality and fewer annual hours worked than the rest of the world decide their personal enjoyment over having kids.
+      - Those where people only earn enough money to themselves due to low life quality, poor education and high annual hours worked, so they can't afford bringing new lifes to this world.
+
 ## Libraries
-You will need to install these libraries. If you are working with anaconda, probably you will not need the first two
+These three libraries were used. If you are working in an anaconda environment, probably you will not need the first two.
 ```
 pip install pandas
 pip install numpy
