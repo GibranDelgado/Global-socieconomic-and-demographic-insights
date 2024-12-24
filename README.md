@@ -13,7 +13,7 @@ The project has two folders:
 ## About the use
 Execute the "Main.py" script. This going to create a new folder "Resulting files" with the excel files required to recreate the dashboard.
 
-`Take in consideration that code are processing thousands of registers, so maybe the execution time can reach around the 9 minutes.`
+`Take in consideration that code are processing thousands of registers, so maybe the execution time can reach the 9 minutes.`
 
 ## Dashboard
 
