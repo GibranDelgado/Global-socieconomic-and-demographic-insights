@@ -29,7 +29,7 @@ See the links below to visualize the implemented dashboard
       - Those where people only earn enough money to themselves due to low life quality, poor education and high annual hours worked, so they can't afford bringing new lifes to this world.
 
 ## Libraries
-These three libraries were used. If you are working in an anaconda environment, probably you will not need the first two.
+These three libraries were used. If you are working in the anaconda environment, probably you will not need the first two.
 ```
 pip install pandas
 pip install numpy
