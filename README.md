@@ -16,7 +16,7 @@ Execute the "Main.py" script. This going to create a new folder called "Resultin
 `Take into consideration that we are processing thousands of registers, so maybe the execution time can reach the 9 minutes.`
 
 ## Dashboard
-See the links below to visualize the implemented dashboard
+See the links below to visualize my dashboard
   - NovyPro: https://project.novypro.com/jv1591
   - Tableau public: https://public.tableau.com/views/GlobalDemographicandSocioeconomicInsights_17257452048160/Dashboard1?:language=es-ES&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link
 
