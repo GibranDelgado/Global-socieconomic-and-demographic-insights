@@ -18,7 +18,7 @@ Execute the "Main.py" script. This going to create a new folder called "Resultin
 ## Dashboard
 See the links below to visualize the implemented dashboard
   - NovyPro: https://project.novypro.com/jv1591
-  - Github pages: https://gibrandelgado.github.io/Global-socieconomic-and-demographic-insights/
+  - Tableau public: https://public.tableau.com/views/GlobalDemographicandSocioeconomicInsights_17257452048160/Dashboard1?:language=es-ES&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link
 
 ## Results discussion
   - **Birth Rate and life expectancy**: Both indicators are higher in Africa and Europe, respectively, than other regions of the world. However, while birth rate tends to decrease over the years, life expecancy tends to increase.
