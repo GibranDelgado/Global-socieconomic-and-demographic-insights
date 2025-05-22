@@ -3,6 +3,11 @@ Thank you for your interest in my project. This exploratory data analysis was ma
 
 Also, annual hours worked by country were used to find a relation with the indicators mentioned before, trying to answer if too many work hours worked annually has a negatively impact on them.
 
+## Dashboard
+See the links below to visualize my dashboard
+  - NovyPro: https://project.novypro.com/jv1591
+  - Tableau public: https://public.tableau.com/views/GlobalDemographicandSocioeconomicInsights_17257452048160/Dashboard1?:language=es-ES&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link
+
 ## Content
 The project has two folders:
   - **Data Sources**: Here, you will find the source files used on this project.
@@ -15,11 +20,6 @@ Execute the "Main.py" script. This going to create a new folder called "Resultin
 
 `Take into consideration that we are processing thousands of registers, so maybe the execution time can reach the 9 minutes.`
 
-## Dashboard
-See the links below to visualize my dashboard
-  - NovyPro: https://project.novypro.com/jv1591
-  - Tableau public: https://public.tableau.com/views/GlobalDemographicandSocioeconomicInsights_17257452048160/Dashboard1?:language=es-ES&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link
-
 ## Results discussion
   - **Birth Rate and life expectancy**: Both indicators are higher in Africa and Europe, respectively, than other regions of the world. However, while birth rate tends to decrease over the years, life expecancy tends to increase.
   - **Population trends:** In most of the countries, especially in first world countries, population tends to decrease each year and the population pyramid tends to invert. These factors affect the effective generational change.
@@ -29,7 +29,7 @@ See the links below to visualize my dashboard
       - Those where people only earn enough money to themselves due to low life quality, poor education and high annual hours worked, so they can't afford bringing new lifes to this world.
 
 ## Libraries
-These three libraries were used. If you are working in the anaconda environment, probably you will not need the first two.
+These three libraries were used. If you are working in the anaconda environment, you will not need the first two.
 ```
 pip install pandas
 pip install numpy
