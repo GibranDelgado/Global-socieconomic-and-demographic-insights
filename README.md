@@ -8,6 +8,8 @@ See the links below to visualize my dashboard
   - NovyPro: https://project.novypro.com/jv1591
   - Tableau public: https://public.tableau.com/views/GlobalDemographicandSocioeconomicInsights_17257452048160/Dashboard1?:language=es-ES&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link
 
+![image alt](https://github.com/GibranDelgado/Global-socieconomic-and-demographic-insights/blob/master/Global%20Demographic%20and%20Socioeconomic%20Insights.png?raw=true)
+
 ## Content
 The project has two folders:
 
